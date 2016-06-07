@@ -3,7 +3,10 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]]
-  :main ^:skip-aot magpie-proxy.core
+  :repositories [["jd-libs-releases" "http://artifactory.360buy-develop.com/libs-releases"]]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.slf4j/slf4j-log4j12 "1.7.21"]
+                 [org.clojure/tools.logging "0.3.1"]]
+  :main ^:skip-aot com.jd.bdp.magpie.magpie-proxy.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
