@@ -8,7 +8,8 @@
                  [org.slf4j/slf4j-log4j12 "1.7.21"]
                  [org.clojure/tools.logging "0.3.1"]
                  [com.jd/jsf "1.6.0"]
-                 [io.forward/yaml "1.0.3"]]
+                 [io.forward/yaml "1.0.3"]
+                 [com.jd.bdp.magpie/magpie-utils "0.1.3-SNAPSHOT"]]
   :main ^:skip-aot com.jd.bdp.magpie.magpie-proxy.core
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]

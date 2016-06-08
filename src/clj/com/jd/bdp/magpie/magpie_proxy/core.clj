@@ -2,6 +2,7 @@
   (:gen-class)
 
   (:require [clojure.tools.logging :as log]
+            [com.jd.bdp.magpie.util.utils :as m-utils]
 
             [com.jd.bdp.magpie.magpie-proxy.utils :as utils]))
 
@@ -33,7 +34,7 @@
   [& args]
   (log/info "Hello, World!")
   (let [conf-file "magpie-proxy.yaml"
-        conf (utils/read-conf conf-file)
+        conf (m-utils/find-yaml conf-file true)
         _ (log/info conf)])
   ;(utils/start-jsf-server)
   ;; (while true

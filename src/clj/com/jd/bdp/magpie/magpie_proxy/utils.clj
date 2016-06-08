@@ -31,12 +31,3 @@
   "test fn"
   [a-str]
   (str "Hi " a-str))
-
-(defn read-conf
-  "read yaml conf"
-  [conf-file]
-  (let [re (yaml/from-file conf-file)]
-    (if (nil? re)
-      (do (log/error conf-file "conf is nil!")
-          (System/exit -1))
-      re)))
