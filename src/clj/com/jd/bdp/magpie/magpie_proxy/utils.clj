@@ -1,5 +1,6 @@
 (ns com.jd.bdp.magpie.magpie-proxy.utils
-  (:require [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [yaml.core :as yaml])
   (:import [com.jd.jsf.gd.config ProviderConfig ServerConfig RegistryConfig]
 
            [com.jd.bdp.magpie.proxy ProxyService ProxyServiceImpl]))
@@ -13,10 +14,9 @@
         provider-config (ProviderConfig.)
         interface-id (.getName ProxyService)
         jsf-alias "magpie-proxy"
-        ref (ProxyServiceImpl.)
-        ]
+        ref (ProxyServiceImpl.)]
     (.setProtocol server-config jsf-protocol)
-    (.setIndex registry-config "192.168.150.121")
+    (.setIndex registry-config "i.jsf.jd.com")
     
     (.setInterfaceId provider-config interface-id)
     (.setAlias provider-config jsf-alias)
@@ -26,3 +26,17 @@
     (.setRegister provider-config true)
     (.export provider-config)
     (log/info "jsf server started!")))
+
+(defn mock-echo-str
+  "test fn"
+  [a-str]
+  (str "Hi " a-str))
+
+(defn read-conf
+  "read yaml conf"
+  [conf-file]
+  (let [re (yaml/from-file conf-file)]
+    (if (nil? re)
+      (do (log/error conf-file "conf is nil!")
+          (System/exit -1))
+      re)))
