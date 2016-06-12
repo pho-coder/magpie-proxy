@@ -1,10 +1,11 @@
-(ns com.jd.bdp.magpie.magpie-proxy.core
+(ns com.jd.bdp.magpie.magpie-proxy.proxy
   (:gen-class)
 
   (:require [clojure.tools.logging :as log]
             [com.jd.bdp.magpie.util.utils :as m-utils]
 
-            [com.jd.bdp.magpie.magpie-proxy.utils :as utils]))
+            [com.jd.bdp.magpie.magpie-proxy.utils :as utils]
+            [com.jd.bdp.magpie.magpie-proxy.jsf-utils :as jsf-utils]))
 
 (defn mock-get-task-status
   "mock get task status"
@@ -32,11 +33,17 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (log/info "Hello, World!")
+  (log/info "Hello, magpie proxy!")
   (let [conf-file "magpie-proxy.yaml"
-        conf (m-utils/find-yaml conf-file true)
-        _ (log/info conf)])
+        conf (m-utils/find-yaml conf-file true)]
+    (loop [clusters (get conf "clusters")]
+      (if-not (empty? clusters)
+        (let [cluster (first clusters)
+              name (key cluster)
+              zk-str (val cluster)]
+          (if (utils/check-magpie-zookeeper zk-str)
+            (log/info "cluster" name "is OK!")
+            (log/error "cluster" name "is NOT OK!"))))))
   ;(utils/start-jsf-server)
-  ;; (while true
-  ;;   (Thread/sleep 10000))
-  )
+  (while true
+    (Thread/sleep 10000)))

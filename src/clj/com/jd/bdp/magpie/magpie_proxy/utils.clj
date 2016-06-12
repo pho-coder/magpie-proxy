@@ -1,33 +1,30 @@
 (ns com.jd.bdp.magpie.magpie-proxy.utils
   (:require [clojure.tools.logging :as log]
-            [yaml.core :as yaml])
-  (:import [com.jd.jsf.gd.config ProviderConfig ServerConfig RegistryConfig]
+            [clj-zookeeper.zookeeper :as zk])
 
-           [com.jd.bdp.magpie.proxy ProxyService ProxyServiceImpl]))
-
-(defn start-jsf-server
-  "start jsf server"
-  []
-  (let [server-config (ServerConfig.)
-        registry-config (RegistryConfig.)
-        jsf-protocol "jsf"
-        provider-config (ProviderConfig.)
-        interface-id (.getName ProxyService)
-        jsf-alias "magpie-proxy"
-        ref (ProxyServiceImpl.)]
-    (.setProtocol server-config jsf-protocol)
-    (.setIndex registry-config "i.jsf.jd.com")
-    
-    (.setInterfaceId provider-config interface-id)
-    (.setAlias provider-config jsf-alias)
-    (.setRef provider-config ref)
-    (.setServer provider-config server-config)
-    (.setRegistry provider-config registry-config)
-    (.setRegister provider-config true)
-    (.export provider-config)
-    (log/info "jsf server started!")))
+  (:import [com.jd.magpie.client MagpieClient]))
 
 (defn mock-echo-str
   "test fn"
   [a-str]
   (str "Hi " a-str))
+
+(defn check-magpie-zookeeper
+  "check magpie zookeeper adress"
+  [zk-str]
+  (try
+    (zk/new-client zk-str)
+    (zk/check-exists? "/magpie/nimbus")
+    (zk/close)
+    (catch Exception e
+      (log/error e)
+      (zk/close)
+      false)))
+
+(defn get-active-nimbus
+  "get magpie active nimbus from zookeeper"
+  [zk-str])
+
+(defn get-one-magpie-client
+  "get "
+  [])
