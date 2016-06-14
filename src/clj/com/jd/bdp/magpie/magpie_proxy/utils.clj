@@ -28,7 +28,7 @@
     (try
       (let [nimbuses (zk/get-children "/magpie/nimbus")]
         (if (< (.size nimbuses) 1)
-          {:success false}
+          {:success false :info "NO ACTIVE NIMBUSES!"}
           (let [nodes (to-array nimbuses)]
             (java.util.Arrays/sort nodes)
             (let [active-nimbus (m-utils/bytes->map (zk/get-data (str "/magpie/nimbus/" (first nodes))))]
@@ -36,8 +36,35 @@
               {:success true :active-nimbus active-nimbus}))))
       (catch Exception e
         (log/error e)
-        {:success false}))))
+        {:success false :info (.toString e) :retry true}))))
 
 (defn get-one-magpie-client
-  "get "
-  [])
+  "get one magpie client
+  success return true"
+  [nimbus-ip nimbus-port]
+  (.getClient (MagpieClient. (hash-map) nimbus-ip nimbus-port)))
+
+(defn submit-task
+  "magpie submit a task"
+  [nimbus-ip nimbus-port task-id jar klass group type]
+  (try
+    (let [client (get-one-magpie-client nimbus-ip nimbus-port)
+          re (.submitTask client task-id jar klass group type)]
+      (log/info "a")
+      (log/info re)
+      {:success true})
+    (catch Exception e
+      (log/error e)
+      {:success false :info (.toString e)})))
+
+(defn get-task-info
+  "get one task info from zookeeper"
+  [zk-str task-id]
+  (with-open [client (zk/new-client zk-str)]
+    (try
+      (let [task-info (m-utils/bytes->map (zk/get-data (str "/magpie/assignments/" task-id)))]
+        (log/info "get task info:" task-info)
+        {:success true :task-info task-info})
+      (catch Exception e
+        (log/error e)
+        {:success false :info (.toString e)}))))

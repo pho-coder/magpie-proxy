@@ -18,4 +18,5 @@
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
   :target-path "target/%s"
+  :plugins [[cider/cider-nrepl "0.12.0"]]
   :profiles {:uberjar {:aot :all}})

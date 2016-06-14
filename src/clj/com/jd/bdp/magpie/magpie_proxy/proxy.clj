@@ -35,8 +35,23 @@
 (defn submit-task
   "submit task"
   [cluster-id task-id jar klass group type]
-  (let [zk-str (get (get @CONF "clusters") cluster-id)
-        active-nimbus (utils/get-active-nimbus zk-str)]))
+  (let [zk-str (get (get @CONF "clusters") cluster-id)]
+    (let [re (utils/get-task-info zk-str task-id)]
+      (if (:success re)
+        (do (log/error "task id:" task-id "exists!")
+            {:success false :info (str "task id:" task-id "exists!")})
+        (let [active-nimbus (utils/get-active-nimbus zk-str)
+              re (utils/submit-task (:ip active-nimbus)
+                                    (:port active-nimbus)
+                                task-id
+                                jar
+                                klass
+                                group
+                                type)]
+      (if-not (:success re)
+        {:success false :info (:info re)}
+        (let [re (utils/get-task-info zk-str task-id)]
+          )))))))
 
 (defn -main
   "I don't do a whole lot ... yet."
