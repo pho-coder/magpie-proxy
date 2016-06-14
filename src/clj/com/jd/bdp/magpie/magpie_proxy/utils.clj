@@ -49,8 +49,7 @@
   [nimbus-ip nimbus-port task-id jar klass group type]
   (try
     (let [client (get-one-magpie-client nimbus-ip nimbus-port)
-          re (.submitTask client task-id jar klass group type)]
-      (log/info "a")
+          re (m-utils/string->map (.submitTask client task-id jar klass group type))]
       (log/info re)
       {:success true})
     (catch Exception e
