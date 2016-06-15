@@ -45,25 +45,36 @@
   (.getClient (MagpieClient. (hash-map) nimbus-ip nimbus-port)))
 
 (defn submit-task
-  "magpie submit a task"
+  "magpie submit a task
+  returncode 0 : submit success and is a new task id
+             1 : submit success and task id exists
+            -1 : submit error"
   [nimbus-ip nimbus-port task-id jar klass group type]
   (try
     (let [client (get-one-magpie-client nimbus-ip nimbus-port)
           re (m-utils/string->map (.submitTask client task-id jar klass group type))]
-      (log/info re)
-      {:success true})
+      (if (get re "success")
+        (if (= (get re "returncode") 0)
+          {:success true :returncode 0 :info (get re "info")}
+          {:success true :returncode 1 :info (get re "info")})
+        {:success false :returncode -1 :info (get re "info")}))
     (catch Exception e
       (log/error e)
-      {:success false :info (.toString e)})))
+      {:success false :info (.toString e) :returncode -1})))
 
 (defn get-task-info
   "get one task info from zookeeper"
   [zk-str task-id]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (let [task-info (m-utils/bytes->map (zk/get-data (str "/magpie/assignments/" task-id)))]
+      (let [task-info (m-utils/bytes->map (zk/get-data (str "/magpie/assignments/" task-id)))
+           task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))
+            ]
         (log/info "get task info:" task-info)
-        {:success true :task-info task-info})
+        (log/info "get task status:" task-status)
+        {:success true :task-info task-info
+        :task-status task-status
+         })
       (catch Exception e
         (log/error e)
         {:success false :info (.toString e)}))))
