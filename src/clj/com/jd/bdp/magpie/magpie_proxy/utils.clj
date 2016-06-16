@@ -22,21 +22,30 @@
         false))))
 
 (defn get-active-nimbus
-  "get magpie active nimbus from zookeeper"
+  "get magpie active nimbus from zookeeper
+  returncode 0 : success
+             1 : no nimbus
+            -1 : unknown error"
   [zk-str]
   (with-open [client (zk/new-client zk-str)]
     (try
       (let [nimbuses (zk/get-children "/magpie/nimbus")]
         (if (< (.size nimbuses) 1)
-          {:success false :info "NO ACTIVE NIMBUSES!"}
+          {:success false
+           :info "NO ACTIVE NIMBUSES!"
+           :returncode 1}
           (let [nodes (to-array nimbuses)]
             (java.util.Arrays/sort nodes)
             (let [active-nimbus (m-utils/bytes->map (zk/get-data (str "/magpie/nimbus/" (first nodes))))]
               (log/info "active nimbus:" active-nimbus)
-              {:success true :active-nimbus active-nimbus}))))
+              {:success true
+               :active-nimbus active-nimbus
+               :returncode 0}))))
       (catch Exception e
         (log/error e)
-        {:success false :info (.toString e) :retry true}))))
+        {:success false
+         :info (.toString e)
+         :returncode -1}))))
 
 (defn get-one-magpie-client
   "get one magpie client
@@ -63,18 +72,26 @@
       {:success false :info (.toString e) :returncode -1})))
 
 (defn get-task-info
-  "get one task info from zookeeper"
+  "get one task info from zookeeper
+   returncode 0 : success
+              1 : task id not exists
+             -1 : unknown error"
   [zk-str task-id]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (let [task-info (m-utils/bytes->map (zk/get-data (str "/magpie/assignments/" task-id)))
-           task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))
-            ]
-        (log/info "get task info:" task-info)
-        (log/info "get task status:" task-status)
-        {:success true :task-info task-info
-        :task-status task-status
-         })
+      (let [task-info-bytes (zk/get-data (str "/magpie/assignments/" task-id))]
+        (if (nil? task-info-bytes)
+          (do (log/warn "task id not exists:" task-id)
+              {:success false
+               :info (str "task id: " task-id " NOT EXISTS!")
+               :returncode 1})
+          (let [task-info (m-utils/bytes->map task-info-bytes)
+                task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))]
+            {:success true
+             :info (assoc task-info "status" task-status)
+             :returncode 0})))
       (catch Exception e
         (log/error e)
-        {:success false :info (.toString e)}))))
+        {:success false
+         :info (.toString e)
+         :returncode -1}))))
