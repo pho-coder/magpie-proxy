@@ -43,15 +43,15 @@
         (let [active-nimbus (utils/get-active-nimbus zk-str)
               re (utils/submit-task (:ip active-nimbus)
                                     (:port active-nimbus)
-                                task-id
-                                jar
-                                klass
-                                group
-                                type)]
-      (if-not (:success re)
-        {:success false :info (:info re)}
-        (let [re (utils/get-task-info zk-str task-id)]
-          )))))))
+                                    task-id
+                                    jar
+                                    klass
+                                    group
+                                    type)]
+          (if-not (:success re)
+            {:success false :info (:info re)}
+            (let [re (utils/get-task-info zk-str task-id)]
+              )))))))
 
 (defn -main
   "I don't do a whole lot ... yet."
