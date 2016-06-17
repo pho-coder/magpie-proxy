@@ -27,13 +27,31 @@
   (log/info task-id command)
   (str cluster-id " " task-id " " command))
 
+(defn get-magpie-zk-address
+  "get magpie zookeeper address
+  returncode 0 : success
+             1 : no zk address from conf
+             2 : NO MAGPIE on the zookeeper
+            -1 : unknown error"
+  [cluster-id]
+  (let [zk-str (get (get @CONF "clusters") cluster-id)]
+    (if (nil? zk-str)
+      {:success false
+       :returncode 1
+       :info (str cluster-id " : no zk address from conf")}
+      (let [re (utils/check-magpie-zookeeper zk-str)]
+        (if (:success))))))
+
 (defn get-task-status
-  "get task status"
+  "get task status
+   returncode 0 :"
   [cluster-id task-id]
-  )
+  (let [zk-str (get (get @CONF "clusters") cluster-id)]
+))
 
 (defn submit-task
-  "submit task"
+  "submit task
+  returncode 0 : success"
   [cluster-id task-id jar klass group type]
   (let [zk-str (get (get @CONF "clusters") cluster-id)]
     (let [re (utils/get-task-info zk-str task-id)]

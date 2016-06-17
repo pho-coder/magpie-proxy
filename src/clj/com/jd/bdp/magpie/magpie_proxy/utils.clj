@@ -12,14 +12,24 @@
   (str "Hi " a-str))
 
 (defn check-magpie-zookeeper
-  "check magpie zookeeper adress"
+  "check magpie zookeeper adress
+   returncode 0 : success
+              1 : no zk node
+             -1 : unknown error"
   [zk-str]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (zk/check-exists? "/magpie/nimbus")
+      (if (zk/check-exists? "/magpie/nimbus")
+        {:success true
+         :returncode 0}
+        {:success false
+         :returncode 1
+         :info "zk node not exists!"})
       (catch Exception e
         (log/error e)
-        false))))
+        {:success false
+         :returncode -1
+         :info (.toString e)}))))
 
 (defn get-active-nimbus
   "get magpie active nimbus from zookeeper
@@ -88,7 +98,7 @@
           (let [task-info (m-utils/bytes->map task-info-bytes)
                 task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))]
             {:success true
-             :info (assoc task-info "status" task-status)
+             :task-info (assoc task-info "status" task-status)
              :returncode 0})))
       (catch Exception e
         (log/error e)
