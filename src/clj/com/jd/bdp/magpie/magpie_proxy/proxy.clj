@@ -40,14 +40,37 @@
        :returncode 1
        :info (str cluster-id " : no zk address from conf")}
       (let [re (utils/check-magpie-zookeeper zk-str)]
-        (if (:success))))))
+        (if (:success re)
+          (assoc re :address zk-str)
+          (if (= (:returncode re) 1)
+            {:success false
+             :returncode 2
+             :info (str "no magpie path on " zk-str)}
+            {:success false
+             :returncode -1
+             :info (:info re)}))))))
 
 (defn get-task-status
   "get task status
-   returncode 0 :"
+   returncode 0 : success
+             -1 : unknown error
+              1 : no zk address from conf
+              2 : NO MAGPIE on the zookeeper
+              3 : task id NOT EXISTS"
   [cluster-id task-id]
-  (let [zk-str (get (get @CONF "clusters") cluster-id)]
-))
+  (log/info "func get-task-status" cluster-id task-id)
+  (let [re2 (let [re0 (get-magpie-zk-address cluster-id)]
+              (if (:success re0)
+                (let [zk-str (:address re0)
+                      re1 (utils/get-task-info zk-str task-id)]
+                  (if (= 1 (:returncode re1))
+                    (m-utils/map->string {:success false
+                                          :returncode 3
+                                          :info (:info re1)})
+                    (m-utils/map->string re1)))
+                (m-utils/map->string re0)))]
+    (log/info re2)
+    re2))
 
 (defn submit-task
   "submit task
@@ -87,8 +110,8 @@
           (if (utils/check-magpie-zookeeper zk-str)
             (log/info "cluster" name "is OK!")
             (log/error "cluster" name "is NOT OK!"))
-          (recur (rest clusters)))))
-    (submit-task "raven" "test-1" "a.jar" "com.a" "default" "memory"))
-  ;(utils/start-jsf-server)
+          (recur (rest clusters))))))
+  (jsf-utils/start-jsf-server)
   (while true
+    (log/info "I am alive!")
     (Thread/sleep 10000)))

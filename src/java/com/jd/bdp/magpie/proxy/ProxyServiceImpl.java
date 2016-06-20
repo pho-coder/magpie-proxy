@@ -10,7 +10,7 @@ public class ProxyServiceImpl implements ProxyService {
         requireFn.invoke(Symbol.intern("com.jd.bdp.magpie.magpie-proxy.utils"));
     }
     private static IFn mockEchoStr = RT.var("com.jd.bdp.magpie.magpie-proxy.utils", "mock-echo-str").fn();
-    private static IFn mockGetTaskStatus = RT.var("com.jd.bdp.magpie.magpie-proxy.core", "mock-get-task-status").fn();
+    private static IFn getTaskStatus = RT.var("com.jd.bdp.magpie.magpie-proxy.proxy", "get-task-status").fn();
     private static IFn mockSubmitTask = RT.var("com.jd.bdp.magpie.magpie-proxy.core", "mock-submit-task").fn();
     private static IFn mockOperateTask = RT.var("com.jd.bdp.magpie.magpie-proxy.core", "mock-operate-task").fn();
 
@@ -21,7 +21,7 @@ public class ProxyServiceImpl implements ProxyService {
 
     @Override
     public String getTaskStatus(String clusterId, String taskId) {
-        return (String)mockGetTaskStatus.invoke(clusterId, taskId);
+        return (String)getTaskStatus.invoke(clusterId, taskId);
     }
 
     @Override
