@@ -11,7 +11,7 @@
                  [org.slf4j/slf4j-log4j12 "1.7.21"]
                  [org.clojure/tools.logging "0.3.1"]
                  [com.jd/jsf "1.6.0"]
-                 [com.jd.magpie/magpie-client "1.1.2-SNAPSHOT"]
+                 [com.jd.magpie/magpie-client "1.1.3-SNAPSHOT"]
                  [com.jd.bdp.magpie/magpie-utils "0.1.3-SNAPSHOT"]
                  [clj-zookeeper "0.2.0-SNAPSHOT"]]
   :main ^:skip-aot com.jd.bdp.magpie.magpie-proxy.proxy
