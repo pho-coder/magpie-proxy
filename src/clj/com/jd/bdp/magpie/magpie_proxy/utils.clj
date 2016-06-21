@@ -59,15 +59,15 @@
 
 (defn get-one-magpie-client
   "get one magpie client
-  success return true"
+   success return true"
   [nimbus-ip nimbus-port]
   (.getClient (MagpieClient. (hash-map) nimbus-ip nimbus-port)))
 
 (defn submit-task
   "magpie submit a task
-  returncode 0 : submit success and is a new task id
-             1 : submit success and task id exists
-            -1 : submit error"
+   returncode 0 : submit success and is a new task id
+              1 : submit success and task id exists
+             -1 : submit error"
   [nimbus-ip nimbus-port task-id jar klass group type]
   (try
     (let [client (get-one-magpie-client nimbus-ip nimbus-port)
@@ -81,6 +81,25 @@
       (log/error e)
       {:success false :info (.toString e) :returncode -1})))
 
+(defn operate-task
+  "magpie operate a task: kill pause active reload
+   returncode 0 : task id exists and command submit success
+              1 : command is unsupported
+              2 : task id not exists
+             -1 : unknown error"
+  [nimbus-ip nimbus-port task-id command]
+  (try
+    (let [client (get-one-magpie-client nimbus-ip nimbus-port)
+          re (m-utils/string->map (.operateTask client task-id command))]
+      {:success (get re "success")
+       :info (get re "info")
+       :returncode (get re "returncode")})
+    (catch Exception e
+      (log/error e)
+      {:success false
+       :info (.toString e)
+       :returncode -1})))
+
 (defn get-task-info
   "get one task info from zookeeper
    returncode 0 : success
@@ -91,10 +110,9 @@
     (try
       (let [task-info-bytes (zk/get-data (str "/magpie/assignments/" task-id))]
         (if (nil? task-info-bytes)
-          (do (log/warn "task id not exists:" task-id)
-              {:success false
-               :info (str "task id: " task-id " NOT EXISTS!")
-               :returncode 1})
+          {:success false
+           :info (str "task id: " task-id " NOT EXISTS!")
+           :returncode 1}
           (let [task-info (m-utils/bytes->map task-info-bytes)
                 task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))]
             {:success true
