@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+bin=`dirname $0`
+bin=`cd "$bin"; pwd`
+DEFAULT_CONF_DIR="$bin"/../conf
+DEFAULT_HOME=`cd "$bin"/..;pwd`
+MAGPIE_PROXY_CONF_DIR=${MAGPIE_PROXY_CONF_DIR:-$DEFAULT_CONF_DIR}
+MAGPIE_PROXY_HOME=${MAGPIE_PROXY_HOME:-$DEFAULT_HOME}
+MAGPIE_PROXY_LOG_DIR=${MAGPIE_PROXY_LOG_DIR:-$MAGPIE_PROXY_HOME/logs}
+PID_FILE="$MAGPIE_PROXY_LOG_DIR/.magpie-proxy.run.pid"
+mkdir -p $MAGPIE_PROXY_LOG_DIR
+MAGPIE_PROXY_HEAP_OPTS="-Xmx256M -Xms128M"
+
+function running(){
+        if [ -f "$PID_FILE" ]; then
+                pid=$(cat "$PID_FILE")
+                process=`ps aux | grep " $pid " | grep -v grep`;
+                if [ "$process" == "" ]; then
+                        return 1;
+                else
+                        return 0;
+                fi
+        else
+                return 1
+        fi
+}
+
+function start_server() {
+        if running; then
+                echo "is running."
+                exit 1
+        fi
+        readonly MASTER_JARS="$(ls "$MAGPIE_PROXY_HOME"/magpie-proxy-*.jar 2> /dev/null | grep magpie-proxy | tr "\n" :)"
+        if [ -n "${JAVA_HOME}" ]; then
+          RUNNER="${JAVA_HOME}/bin/java"
+        else
+          if [ `command -v java` ]; then
+            RUNNER="java"
+          else
+            echo "JAVA_HOME is not set" >&2
+            exit 1
+          fi
+        fi
+        CLASSPATH="$MAGPIE_PROXY_CONF_DIR:$MASTER_JARS"
+        nohup "$RUNNER" $MAGPIE_PROXY_HEAP_OPTS -cp "$CLASSPATH" -Dmagpie.proxy.configuration="$MAGPIE_PROXY_CONF_DIR" -Dlog4j.configuration=magpie.proxy.log4j.properties -Dmagpie.proxy.home="$MAGPIE_PROXY_HOME" com.jd.bdp.magpie.magpie_proxy.proxy "$@" > "$MAGPIE_PROXY_LOG_DIR"/magpie-proxy.out 2>&1 < /dev/null &
+        echo $! > $PID_FILE
+        chmod 755 $PID_FILE
+       sleep 1;
+       tail -f "$MAGPIE_PROXY_LOG_DIR"/magpie-proxy.log
+}
+
+function stop_server() {
+        if ! running; then
+                echo "magpie-proxy is not running."
+        fi
+        count=0
+        pid=$(cat $PID_FILE)
+        while running;
+        do
+          let count=$count+1
+          echo "Stopping $count times"
+          if [ $count -gt 5 ]; then
+              echo "kill -9 $pid"
+              kill -9 $pid
+          else
+              kill $pid
+          fi
+          sleep 3;
+        done
+        echo "Stop magpie-proxy successfully." 
+        rm $PID_FILE
+}
+
+function status(){
+        if running;then
+                echo "magpie-proxy is running."
+        else
+                echo "magpie-proxy is not running."
+        fi
+        exit 0
+}
+
+function help() {
+    echo "Usage: magpie-proxy {start|stop}" >&2
+    echo "       start:             start"
+    echo "       stop:              stop"
+}
+
+command=$1
+shift 1
+case $command in
+    status)
+        status $@;
+        ;;
+    start)
+        start_server $@;
+        ;;
+    stop)
+        stop_server $@;
+        ;;
+    restart)
+        stop_server $@;
+        start_server $@;
+        ;;
+    *)
+        help;
+        exit 1;
+        ;;
+esac
