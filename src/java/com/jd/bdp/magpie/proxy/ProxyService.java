@@ -4,7 +4,7 @@ public interface ProxyService {
 
     public String echoStr(String str);
 
-    public String getTaskStatus(String clusterId, String taskId);
+    public String getTaskInfo(String clusterId, String taskId);
 
     public String submitTask(String clusterId, String taskId, String jar, String klass, String group, String type);
 

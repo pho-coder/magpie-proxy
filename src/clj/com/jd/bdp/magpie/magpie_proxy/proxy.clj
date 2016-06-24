@@ -50,13 +50,13 @@
              :returncode -1
              :info (:info re)}))))))
 
-(defn get-task-status
-  "get task status
+(defn get-task-info
+  "get task info
    returncode 0 : success
              -1 : unknown error
               1 : task id NOT EXISTS"
   [cluster-id task-id]
-  (log/info "func get-task-status:" cluster-id task-id)
+  (log/info "func get-task-info:" cluster-id task-id)
   (let [zk-str (get (get @CONF "clusters") cluster-id)]
     (m-utils/map->string (utils/get-task-info zk-str task-id))))
 
@@ -144,19 +144,20 @@
   [& args]
   (log/info "Hello, magpie proxy!")
   (let [conf-file "magpie-proxy.yaml"
-        conf (m-utils/find-yaml conf-file true)]
+        conf (m-utils/find-yaml conf-file true)
+        check-clusters (fn []
+                         (loop [clusters (get @CONF "clusters")]
+                           (if-not (empty? clusters)
+                             (let [cluster (first clusters)
+                                   name (key cluster)
+                                   zk-str (val cluster)]
+                               (if (utils/check-magpie-zookeeper zk-str)
+                                 (log/info "cluster" name "is OK!")
+                                 (log/error "cluster" name "is NOT OK!"))
+                               (recur (rest clusters))))))]
     (reset! CONF conf)
     (log/info CONF)
-    (loop [clusters (get conf "clusters")]
-      (if-not (empty? clusters)
-        (let [cluster (first clusters)
-              name (key cluster)
-              zk-str (val cluster)]
-          (if (utils/check-magpie-zookeeper zk-str)
-            (log/info "cluster" name "is OK!")
-            (log/error "cluster" name "is NOT OK!"))
-          (recur (rest clusters))))))
-  (jsf-utils/start-jsf-server)
-  (while true
-    (log/info "I am alive!")
-    (Thread/sleep 10000)))
+    (jsf-utils/start-jsf-server)
+    (while true
+      (check-clusters)
+      (Thread/sleep 20000))))
