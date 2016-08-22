@@ -6,13 +6,12 @@
 
 (defn start-jsf-server
   "start jsf server"
-  []
+  [jsf-alias]
   (let [server-config (ServerConfig.)
         registry-config (RegistryConfig.)
         jsf-protocol "jsf"
         provider-config (ProviderConfig.)
         interface-id (.getName ProxyService)
-        jsf-alias "magpie-proxy"
         ref (ProxyServiceImpl.)]
     (.setProtocol server-config jsf-protocol)
     (.setIndex registry-config "i.jsf.jd.com")

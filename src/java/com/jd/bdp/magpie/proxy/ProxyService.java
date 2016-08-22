@@ -6,6 +6,8 @@ public interface ProxyService {
 
     public String getTaskInfo(String clusterId, String taskId);
 
+    public String getTasksInfo(String clusterId);
+
     public String submitTask(String clusterId, String taskId, String jar, String klass, String group, String type);
 
     public String operateTask(String clusterId, String taskId, String command);

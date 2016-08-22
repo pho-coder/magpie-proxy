@@ -60,6 +60,16 @@
   (let [zk-str (get (get @CONF "clusters") cluster-id)]
     (m-utils/map->string (utils/get-task-info zk-str task-id))))
 
+(defn get-tasks-info
+  "get tasks info from a cluster
+   returncode 0 : success
+             -1 : unknown error
+              1 : get tasks list error"
+  [cluster-id]
+  (log/info "func get-tasks-info:" cluster-id)
+  (let [zk-str (get (get @CONF "clusters") cluster-id)]
+    (m-utils/map->string (utils/get-tasks-info zk-str))))
+
 (defn submit-task
   "submit task
   returncode 0 : success
@@ -157,7 +167,7 @@
                                (recur (rest clusters))))))]
     (reset! CONF conf)
     (log/info CONF)
-    (jsf-utils/start-jsf-server)
+    (jsf-utils/start-jsf-server (get @CONF "jsf-alias"))
     (while true
       (check-clusters)
       (Thread/sleep 20000))))

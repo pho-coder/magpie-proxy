@@ -132,21 +132,24 @@
   [zk-str]
   (try
     (with-open [client (zk/new-client zk-str)]
-      (let [tasks-list-bytes (zk/get-data (str "/magpie/assignments"))]
-        (if (nil? tasks-list-bytes)
+      (let [tasks-list (zk/get-children "/magpie/assignments")]
+        (if (nil? tasks-list)
           {:success false
            :info (str "get assignments error!")
            :returncode 1}
-          (let [tasks-list (m-utils/bytes->map tasks-list-bytes)]
-            tasks-list))))
+          {:success true
+           :tasks-info (doall (filter #(not (nil? %))
+                                      (map #(let [task-id %
+                                                  task-info-bytes (zk/get-data (str "/magpie/assignments/" task-id))]
+                                              (if (nil? task-info-bytes)
+                                                nil
+                                                (assoc (m-utils/bytes->map task-info-bytes)
+                                                       "status"
+                                                       (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id))))))
+                                           tasks-list)))
+           :returncode 0})))
     (catch Exception e
       (log/error e)
       {:success false
        :info (.toString e)
        :returncode -1})))
-
-
-
-
-    
-
