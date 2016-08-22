@@ -123,3 +123,30 @@
         {:success false
          :info (.toString e)
          :returncode -1}))))
+
+(defn get-tasks-info
+  "get tasks list from assignments
+  returncode 0 : success
+            -1 : unknown error
+             1 : get assignments tasks list error"
+  [zk-str]
+  (try
+    (with-open [client (zk/new-client zk-str)]
+      (let [tasks-list-bytes (zk/get-data (str "/magpie/assignments"))]
+        (if (nil? tasks-list-bytes)
+          {:success false
+           :info (str "get assignments error!")
+           :returncode 1}
+          (let [tasks-list (m-utils/bytes->map tasks-list-bytes)]
+            tasks-list))))
+    (catch Exception e
+      (log/error e)
+      {:success false
+       :info (.toString e)
+       :returncode -1})))
+
+
+
+
+    
+
