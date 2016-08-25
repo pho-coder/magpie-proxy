@@ -140,7 +140,11 @@
           {:success true
            :tasks-info (doall (filter #(not (nil? %))
                                       (map #(let [task-id %
-                                                  task-info-bytes (zk/get-data (str "/magpie/assignments/" task-id))]
+                                                  task-info-bytes (try
+                                                                    (zk/get-data (str "/magpie/assignments/" task-id))
+                                                                    (catch org.apache.zookeeper.KeeperException$NoNodeException e
+                                                                      (log/warn e)
+                                                                      nil))]
                                               (if (nil? task-info-bytes)
                                                 nil
                                                 (assoc (m-utils/bytes->map task-info-bytes)
