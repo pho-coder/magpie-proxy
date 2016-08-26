@@ -19,7 +19,7 @@
   [zk-str]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (if (zk/check-exists? "/magpie/nimbus")
+      (if (zk/check-exists? client "/magpie/nimbus")
         {:success true
          :returncode 0}
         {:success false
@@ -39,14 +39,14 @@
   [zk-str]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (let [nimbuses (zk/get-children "/magpie/nimbus")]
+      (let [nimbuses (zk/get-children client "/magpie/nimbus")]
         (if (< (.size nimbuses) 1)
           {:success false
            :info "NO ACTIVE NIMBUSES!"
            :returncode 1}
           (let [nodes (to-array nimbuses)]
             (java.util.Arrays/sort nodes)
-            (let [active-nimbus (m-utils/bytes->map (zk/get-data (str "/magpie/nimbus/" (first nodes))))]
+            (let [active-nimbus (m-utils/bytes->map (zk/get-data client (str "/magpie/nimbus/" (first nodes))))]
               (log/info "active nimbus:" active-nimbus)
               {:success true
                :active-nimbus active-nimbus
@@ -108,13 +108,13 @@
   [zk-str task-id]
   (with-open [client (zk/new-client zk-str)]
     (try
-      (let [task-info-bytes (zk/get-data (str "/magpie/assignments/" task-id))]
+      (let [task-info-bytes (zk/get-data client (str "/magpie/assignments/" task-id))]
         (if (nil? task-info-bytes)
           {:success false
            :info (str "task id: " task-id " NOT EXISTS!")
            :returncode 1}
           (let [task-info (m-utils/bytes->map task-info-bytes)
-                task-status (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id)))]
+                task-status (m-utils/bytes->string (zk/get-data client (str "/magpie/status/" task-id)))]
             {:success true
              :task-info (assoc task-info "status" task-status)
              :returncode 0})))
@@ -132,7 +132,7 @@
   [zk-str]
   (try
     (with-open [client (zk/new-client zk-str)]
-      (let [tasks-list (zk/get-children "/magpie/assignments")]
+      (let [tasks-list (zk/get-children client "/magpie/assignments")]
         (if (nil? tasks-list)
           {:success false
            :info (str "get assignments error!")
@@ -141,7 +141,7 @@
            :tasks-info (doall (filter #(not (nil? %))
                                       (map #(let [task-id %
                                                   task-info-bytes (try
-                                                                    (zk/get-data (str "/magpie/assignments/" task-id))
+                                                                    (zk/get-data client (str "/magpie/assignments/" task-id))
                                                                     (catch org.apache.zookeeper.KeeperException$NoNodeException e
                                                                       (log/warn e)
                                                                       nil))]
@@ -149,7 +149,7 @@
                                                 nil
                                                 (assoc (m-utils/bytes->map task-info-bytes)
                                                        "status"
-                                                       (m-utils/bytes->string (zk/get-data (str "/magpie/status/" task-id))))))
+                                                       (m-utils/bytes->string (zk/get-data client (str "/magpie/status/" task-id))))))
                                            tasks-list)))
            :returncode 0})))
     (catch Exception e
