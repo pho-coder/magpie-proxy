@@ -67,8 +67,10 @@
               1 : get tasks list error"
   [cluster-id]
   (log/info "func get-tasks-info:" cluster-id)
-  (let [zk-str (get (get @CONF "clusters") cluster-id)]
-    (m-utils/map->string (utils/get-tasks-info zk-str))))
+  (let [zk-str (get (get @CONF "clusters") cluster-id)
+        re (m-utils/map->string (utils/get-tasks-info zk-str))]
+    (log/info "func get-tasks-info:" cluster-id "finish.")
+    re))
 
 (defn submit-task
   "submit task
@@ -148,6 +150,31 @@
                                       :returncode 1
                                       :info (:info re)}
                                    -1 re))))))))
+
+(defn get-supervisors-info
+  "input:
+   crow 192.168.1.1,192.168.1.2
+   output:
+   success : true
+   returncode : 0
+   supervisors-info : [{ip:1.1.1.1 tasks: [{id:\"job-a\" assign-time: 1234567890123]}]
+  "
+  [cluster-id ips]
+  (log/info "func get-supervisors-info:" cluster-id ips)
+  (let [zk-str (get (get @CONF "clusters") cluster-id)
+        supervisors-info-re (utils/get-supervisors-info zk-str)]
+    (log/info supervisors-info-re)
+    (if-not (:success supervisors-info-re)
+      (m-utils/map->string {"success" false
+                            "returncode" -1
+                            "info" (:info supervisors-info-re)})
+      (let [supervisors-info (:supervisors-info supervisors-info-re)
+            ips (into #{} (clojure.string/split ips #","))
+            filtered-supervisors-info (filter #(contains? ips (get % "ip"))
+                                              supervisors-info)]
+        (m-utils/map->string {:success true
+                              :returncode 0
+                              :supervisors-info filtered-supervisors-info})))))
 
 (defn -main
   "I don't do a whole lot ... yet."

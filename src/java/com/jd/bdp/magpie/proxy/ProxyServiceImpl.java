@@ -14,6 +14,7 @@ public class ProxyServiceImpl implements ProxyService {
     private static IFn getTasksInfo = RT.var("com.jd.bdp.magpie.magpie-proxy.proxy", "get-tasks-info").fn();
     private static IFn submitTask = RT.var("com.jd.bdp.magpie.magpie-proxy.proxy", "submit-task").fn();
     private static IFn operateTask = RT.var("com.jd.bdp.magpie.magpie-proxy.proxy", "operate-task").fn();
+    private static IFn getSupervisorsInfo = RT.var("com.jd.bdp.magpie.magpie-proxy.proxy", "get-supervisors-info").fn();
 
     @Override
     public String echoStr(String str) {
@@ -34,9 +35,19 @@ public class ProxyServiceImpl implements ProxyService {
     public String submitTask(String clusterId, String taskId, String jar, String klass, String group, String type) {
         return (String)submitTask.invoke(clusterId, taskId, jar, klass, group, type);
     }
+
+    @Override
+    public String submitTaskWithJarId(String clusterId, String taskId, String jar, String jarid, String klass, String group, String type) {
+        return (String) submitTask.invoke(clusterId, taskId, jar, klass, group, type);
+    }
     
     @Override
     public String operateTask(String clusterId, String taskId, String command) {
         return (String)operateTask.invoke(clusterId, taskId, command);
+    }
+
+    @Override
+    public String getSupervisorsInfo(String clusterId, String ips) {
+        return (String)getSupervisorsInfo.invoke(clusterId, ips);
     }
 }

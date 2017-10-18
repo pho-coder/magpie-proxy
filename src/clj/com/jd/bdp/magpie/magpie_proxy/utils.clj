@@ -157,3 +157,53 @@
       {:success false
        :info (.toString e)
        :returncode -1})))
+
+(defn get-supervisors-info
+  "get all supervisors info in one cluster
+   returncode 0 : success
+             -1 : unknown error
+              1 : get supervisors list error"
+  [zk-str]
+  (try
+    (with-open [client (zk/new-client zk-str)]
+      (let [supervisors-list (zk/get-children client "/magpie/supervisors")]
+        (if (nil? supervisors-list)
+          {:success false
+           :info "get supervisors error!"
+           :returncode 1}
+          {:success true
+           :returncode 0
+           :supervisors-info (doall (filter #(not (nil? %))
+                                            (map #(let [supervisor-id %
+                                                        supervisor-info-bytes (try
+                                                                                (zk/get-data client (str "/magpie/supervisors/" supervisor-id))
+                                                                                (catch org.apache.zookeeper.KeeperException$NoNodeException e
+                                                                                  (log/warn e)
+                                                                                  nil))]
+                                                    (if (nil? supervisor-info-bytes)
+                                                      nil
+                                                      (assoc (m-utils/bytes->map supervisor-info-bytes)
+                                                             "tasks"
+                                                             (let [tasks-list (zk/get-children client (str "/magpie/yourtasks/" supervisor-id))]
+                                                               (if (nil? tasks-list)
+                                                                 nil
+                                                                 (map (fn [task-id]
+                                                                        (let [task-bytes (try
+                                                                                           (let [cclient (zk/new-client zk-str)]
+                                                                                             (zk/get-data cclient (str "/magpie/yourtasks/" supervisor-id "/" task-id)))
+                                                                                           (catch org.apache.zookeeper.KeeperException$NoNodeException e
+                                                                                             (log/warn e)
+                                                                                             nil))]
+                                                                          {"id" task-id
+                                                                           "assign-time" (if (nil? task-bytes)
+                                                                                           nil
+                                                                                           (get (m-utils/bytes->map task-bytes)
+                                                                                                "assign-time"))}))
+                                                                      tasks-list)
+                                                                 )))))
+                                                 supervisors-list)))})))
+    (catch Exception e
+      (log/error e)
+      {:success false
+       :info (.toString e)
+       :returncode -1})))
