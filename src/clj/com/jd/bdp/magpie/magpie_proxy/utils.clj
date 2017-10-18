@@ -4,7 +4,7 @@
             [clj-zookeeper.zookeeper :as zk]
             [com.jd.bdp.magpie.util.utils :as m-utils])
 
-  (:import [com.jd.magpie.client MagpieClient]))
+  (:import [com.jd.bdp.magpie.client MagpieClient]))
 
 (defn mock-echo-str
   "test fn"

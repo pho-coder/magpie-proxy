@@ -1,4 +1,4 @@
-(defproject magpie-proxy "0.6.1-SNAPSHOT"
+(defproject magpie-proxy "2.0.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -11,9 +11,9 @@
                  [org.slf4j/slf4j-log4j12 "1.7.21"]
                  [org.clojure/tools.logging "0.3.1"]
                  [com.jd/jsf "1.6.0"]
-                 [com.jd.magpie/magpie-client "1.1.3-SNAPSHOT"]
+                 [com.jd.bdp.magpie/magpie-client "1.1.5-SNAPSHOT"]
                  [com.jd.bdp.magpie/magpie-utils "0.1.3-SNAPSHOT"]
-                 [clj-zookeeper "0.3.0-SNAPSHOT"]]
+                 [clj-zookeeper "0.4.0-SNAPSHOT"]]
   :main ^:skip-aot com.jd.bdp.magpie.magpie-proxy.proxy
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
